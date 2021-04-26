@@ -7,6 +7,7 @@ import com.company.classes.Worker;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -20,7 +21,7 @@ import com.company.exceptions.InvalidDataException;
 import com.company.exceptions.OperationCanceledException;
 import com.company.exceptions.UnknownCommandException;
 
-public class DataBase {
+public class DataBase implements Serializable {
 
     private LinkedList<Worker> database;
     private Scanner terminal;
@@ -37,27 +38,6 @@ public class DataBase {
     //public methods
 
     /**
-     * Initializing database (like constructor)
-     * @param filePath
-     */
-    public void initialize(String filePath){
-        //initializing variables
-        this.database = new LinkedList<>();
-        this.terminal = new Scanner(System.in);
-        this.initializationTime = ZonedDateTime.now();
-        this.recursionCounter = 0;
-        this.scriptName = "";
-        this.isInitialized = true;
-
-        System.out.println("Database has been initialized");
-        System.out.println("------------------------------------");
-
-        //reading from file and then from terminal
-        readFromFile(filePath);
-        readFromTerminal();
-    }
-
-    /**
      * Initializing database (like constructor), but without a file (if it's not given)
      */
     public void initialize(){
@@ -69,118 +49,12 @@ public class DataBase {
         this.scriptName = "";
         this.isInitialized = true;
 
-        System.out.println("Database has been initialized without file");
+        System.out.println("Database has been initialized");
         System.out.println("------------------------------------");
     }
 
-    /**
-     * Main input from console(terminal)
-     */
-    public void readFromTerminal(){
-        //cancelling if not initialized
-        if(!isInitialized){
-            System.out.println("DataBase hasn't been initialized! Cancelling...");
-            return;
-        }
-
-        //reading from terminal and checking if command exist
-        String command;
-        while(true) {
-            //check when we read from file
-            if (!terminal.hasNext()) {
-                return;
-            }
-
-            //reading command
-            command = terminal.nextLine();
-            command = command.toLowerCase();
-
-            //skip empty line
-            if (command.matches("\\s")) continue;
-
-            try {
-                //getting command
-                Commands c = Terminal.matchCommand(command);
-
-                switch (c){
-                    case HELP:
-                        help();
-                        break;
-                    case INFO:
-                        info();
-                        break;
-                    case SHOW:
-                        show();
-                        break;
-                    case ADD:
-                        add();
-                        break;
-                    case UPDATE:
-                        updateById(command);
-                        break;
-                    case REMOVE_BY_ID:
-                        remove(command);
-                        break;
-                    case CLEAR:
-                        clear();
-                        break;
-                    case SAVE:
-                        save();
-                        break;
-                    case EXECUTE_SCRIPT:
-                        executeScript(command);
-                        break;
-                    case EXIT:
-                        System.exit(1);
-                        break;
-                    case ADD_IF_MAX:
-                        addIfMax();
-                        break;
-                    case REMOVE_GREATER:
-                        removeGreater(command);
-                        break;
-                    case REMOVE_LOWER:
-                        removeLower(command);
-                        break;
-                    case GROUP_COUNTING_BY_POSITION:
-                        groupCountingByPosition();
-                        break;
-                    case COUNT_LESS_THAN_START_DATE:
-                        countLessThanStartDate(command);
-                        break;
-                    case FILTER_GREATER_THAN_START_DATE:
-                        filterGreaterThanStartDate(command);
-                        break;
-                    default:
-                        System.out.println("Unknown command");
-                        break;
-                }
-            } catch (UnknownCommandException | OperationCanceledException e) {
-                System.out.println(e.getMessage());
-            }
-        }
-    }
-
-    /**
-     * Reader from given file.
-     * @param filePath
-     */
-    public void readFromFile(String filePath){
-        //cancelling if not initialized
-        if(!isInitialized){
-            System.out.println("DataBase hasn't been initialized! Cancelling...");
-            return;
-        }
-
-        //parsing
-        try {
-            LinkedList<Worker> databaseFromXML = FileParser.xmlToDatabase(filePath);
-            if (databaseFromXML != null){
-                this.database = databaseFromXML;
-            }
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
+    public void setDatabase(LinkedList<Worker> database){
+        this.database = database;
     }
 
     //protected methods
@@ -201,157 +75,9 @@ public class DataBase {
         return index;
     }
 
-    /**
-     * The whole code of updating feilds
-     * @param index
-     * @throws OperationCanceledException
-     */
-    protected void updateFields(int index) throws OperationCanceledException{
-        //checking if element exists
-        if (database.get(index) == null){
-            System.out.println("Invalid index!");
-            return;
-        }
-
-        //choosing the field to update
-        System.out.println("Which field would you like to update: " + Arrays.toString(Arrays.stream(Fields.getFields()).toArray()) + " ?");
-        String choice;
-        try {
-            while (!Fields.isEnum(choice = terminal.nextLine())){
-                System.out.println("Incorrect field. Try again: ");
-            }
-        } catch (NoSuchElementException e) {
-            throw new OperationCanceledException();
-        }
-
-        Fields field = Fields.findEnum(choice);
-
-        //updating chosen field
-        switch (field){
-            case NAME:
-                System.out.println("Please, type the new name: ");
-                try {
-                    database.get(index).setName(Terminal.removeSpaces(Terminal.repeatInputAndExpectRegex("name", "\\s*\\w+\\s*")) );
-                } catch (InvalidDataException | OperationCanceledException e) {
-                    System.out.println(e.getMessage());
-                    return;
-                }
-                System.out.println(field.toString() + " has been successfully updated!");
-                break;
-            case SALARY:
-                System.out.println("Please, type the new salary: ");
-                try {
-                    database.get(index).setSalary(Double.parseDouble(Terminal.removeSpaces(Terminal.repeatInputAndExpectRegex("salary", "\\s*\\d+\\.*\\d*\\s*"))));
-                } catch (InvalidDataException | OperationCanceledException e) {
-                    System.out.println(e.getMessage());
-                    return;
-                }
-                System.out.println(field.toString() + " has been successfully updated!");
-                break;
-            case POSITION:
-                System.out.println("Please, type the new position " + Arrays.toString(Position.values()) + ": ");
-                Position newPosition;
-                try {
-                    newPosition = Position.findEnum(Terminal.removeSpaces(Terminal.repeatInputAndExpectRegexOrNull("position", "\\s*\\w+\\s*")));
-                } catch (OperationCanceledException e) {
-                    System.out.println(e.getMessage());
-                    return;
-                }
-                this.database.get(index).setPosition(newPosition);
-                System.out.println(field.toString() + " has been successfully updated!");
-                break;
-            case PERSONALITY:
-                System.out.println("PLease, type the new height: ");
-                Person person = new Person();
-                try {
-                    person.setHeight(Long.valueOf(Terminal.repeatInputAndExpectRegexOrNull("height", "\\s*[0-9]+\\s*")));
-                } catch (Exception e){
-                    //pass, because Person is already null
-                }
-
-                System.out.println("PLease, type the new weight: ");
-                try {
-                    person.setWeight((int) Long.parseLong(Terminal.repeatInputAndExpectRegexOrNull("weight", "\\s*[0-9]+\\s*")));
-                } catch (Exception e){
-                    //pass
-                }
-
-                this.database.get(index).setPerson(person);
-                System.out.println(field.toString() + " has been successfully updated!");
-                break;
-            case COORDINATES:
-                Coordinates c = new Coordinates(0,0);
-
-                try {
-                    System.out.print("X = ");
-                    c.setX(
-                            Long.parseLong(Terminal.removeSpaces(
-                                    Terminal.repeatInputAndExpectRegex("x coordinate", "\\s*\\d+\\s*")
-                            ))
-                    );
-                    System.out.print("Y = ");
-                    c.setY((int)
-                            Long.parseLong(Terminal.removeSpaces(
-                                    Terminal.repeatInputAndExpectRegex("y coordinate", "\\s*\\d+\\s*")
-                            ))
-                    );
-                } catch (InvalidDataException | OperationCanceledException e) {
-                    System.out.println(e.getMessage());
-                    return;
-                }
-
-                this.database.get(index).setCoordinates(c);
-                System.out.println(field.toString() + " has been successfully updated!");
-                break;
-            case STARTDATE:
-                System.out.println("Please, write the new start day (yyyy-mm-dd): ");
-
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                LocalDate date;
-                try {
-                    date = LocalDate.parse(Terminal.removeSpaces(Terminal.repeatInputAndExpectRegex(
-                            "start day", "\\s*(?!0000)(\\d{4})-(0[1-9]|1[0-2])-[0-3]\\d\\s*")), formatter);
-                } catch (OperationCanceledException e) {
-                    System.out.println(e.getMessage());
-                    return;
-                }
-
-                this.database.get(index).setStartDate( date.atStartOfDay(ZoneId.systemDefault()) );
-                System.out.println(field.toString() + " has been successfully updated!");
-                break;
-            case ENDDATE:
-                formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                System.out.println("Please, write the new end day (yyyy-mm-dd): ");
-                String enddate;
-                try {
-                    enddate = Terminal.removeSpaces(
-                            Terminal.repeatInputAndExpectRegexOrNull("end day", "\\s*(?!0000)(\\d{4})-(0[1-9]|1[0-2])-[0-3]\\d\\s*")
-                    );
-                } catch (OperationCanceledException e) {
-                    System.out.println(e.getMessage());
-                    return;
-                }
-                if (enddate == null){
-                    this.database.get(index).setEndDate(null);
-                } else {
-                    date = LocalDate.parse(enddate, formatter);
-                    this.database.get(index).setEndDate(date.atStartOfDay(ZoneId.systemDefault()));
-                }
-
-                System.out.println(field.toString() + " has been successfully updated!");
-                break;
-        }
-        System.out.println("Worker was successfully updated!");
-    }
-
     //terminal commands
 
-    /**
-     * small version of update_by_id command - excluding the updating process
-     * @param commandWithID
-     * @throws OperationCanceledException
-     */
-    protected void updateById(String commandWithID) throws OperationCanceledException {
+    /*protected void updateById(String commandWithID) throws OperationCanceledException {
         //removing spaces and "update" word to turn into long
         commandWithID = Terminal.removeString(commandWithID, "update");
         if (commandWithID.isEmpty() || !commandWithID.matches("\\d+")){
@@ -366,35 +92,25 @@ public class DataBase {
         } else {
             System.out.println("Element not found");
         }
-    }
+    }*/
 
     public String help(){
         StringBuilder sb = new StringBuilder();
 
-        sb.append("------------------------------------");
-        sb.append("Commands: ");
+        sb.append("------------------------------------");sb.append("\n");
+        sb.append("Commands: ");sb.append("\n");
         for (int i = 0; i < Commands.values().length; i++) {
-            sb.append(" " + Commands.getCommandsWithDescriptions()[i]);
+            sb.append(" " + Commands.getCommandsWithDescriptions()[i]);sb.append("\n");
         }
-        sb.append("------------------------------------");
+        sb.append("------------------------------------");sb.append("\n");
 
         return sb.toString();
     }
 
-    protected void add() {
-        //creating
-        Worker newWorker = null;
-        try {
-            newWorker = new Worker.WorkerBuilderFromTerminal().build();
-        } catch (OperationCanceledException | InvalidDataException e) {
-            System.out.println(e.getMessage());
-            System.out.println("Couldn't add worker");
-            return;
-        }
-
+    public String add(Worker worker) {
         //adding to database
-        this.database.add(newWorker);
-        System.out.println("New worker was successfully added!");
+        this.database.add(worker);
+        return "New worker was successfully added!";
     }
 
     public String show(){
@@ -404,9 +120,9 @@ public class DataBase {
             return "Database is empty";
         }
 
-        StringBuilder sbb = new StringBuilder();
+        StringBuilder stringBuilder = new StringBuilder();
 
-        sbb.append("------------------------------------");sbb.append("\n");
+        stringBuilder.append("------------------------------------");stringBuilder.append("\n");
         List<List<String>> rows = new ArrayList<>();
         List<String> headers = Arrays.asList("Name", "id", "Salary", "Position", "Personality", "Coordinates", "Start Date", "End Date");
         rows.add(headers);
@@ -444,10 +160,10 @@ public class DataBase {
             rows.add((List<String>) sb.clone());
             sb.clear();
         }
-        sbb.append(Terminal.formatAsTable(rows));sbb.append("\n");
-        sbb.append("------------------------------------"); sbb.append("\n");
+        stringBuilder.append(Terminal.formatAsTable(rows));stringBuilder.append("\n");
+        stringBuilder.append("------------------------------------"); stringBuilder.append("\n");
 
-        return sb.toString();
+        return stringBuilder.toString();
     }
 
     public String info(){
@@ -477,7 +193,7 @@ public class DataBase {
         }
     }
 
-    protected void save(){
+    public void save(){
         //input file name
         System.out.print("Please, type the name of a new file: ");
         String newFilename;
@@ -499,7 +215,7 @@ public class DataBase {
         }
     }
 
-    protected void remove(String commandWithID){
+    public void remove(String commandWithID){
         //removing spaces and "remove" word to turn into long
         commandWithID = Terminal.removeString(commandWithID, "remove_by_id");
         if (commandWithID.isEmpty()){
@@ -526,7 +242,7 @@ public class DataBase {
         }
     }
 
-    protected void executeScript(String commandWithFilename){
+    /*public void executeScript(String commandWithFilename){
         //removing spaces and "remove" word to turn into long
         commandWithFilename = Terminal.removeString(commandWithFilename, "execute_script") + ".txt";
 
@@ -569,9 +285,9 @@ public class DataBase {
         Terminal.changeScanner(this.terminal);
         //continue reading
         readFromTerminal();
-    }
+    }*/
 
-    protected void removeGreater(String commandWithSalary){
+    public void removeGreater(String commandWithSalary){
         //removing spaces and "update" word to turn into long
         commandWithSalary = Terminal.removeString(commandWithSalary, "remove_greater");
         double salary = Double.parseDouble(commandWithSalary);
@@ -592,7 +308,7 @@ public class DataBase {
         System.out.println("Workers with salary greater " + salary + " were successfully removed!");
     }
 
-    protected void removeLower(String commandWithSalary){
+    public void removeLower(String commandWithSalary){
         //removing spaces and "update" word to turn into long
         commandWithSalary = Terminal.removeString(commandWithSalary, "remove_lower");
         double salary = Double.parseDouble(commandWithSalary);
@@ -612,7 +328,7 @@ public class DataBase {
         System.out.println("Workers with salary lower " + salary + " were successfully removed!");
     }
 
-    protected void groupCountingByPosition(){
+    public void groupCountingByPosition(){
         StringBuilder sb = new StringBuilder();
         for (Position p: Position.values()) {
             System.out.println("-----------" + p.toString() + "-----------");
@@ -628,7 +344,7 @@ public class DataBase {
         }
     }
 
-    protected void countLessThanStartDate(String commandWithStartDate){
+    public void countLessThanStartDate(String commandWithStartDate){
         //removing spaces and "count_less_than_start_date" word to turn into date
         commandWithStartDate = Terminal.removeString(commandWithStartDate, "count_less_than_start_date");
         if (!commandWithStartDate.matches("\\s*(?!0000)(\\d{4})-(0[1-9]|1[0-2])-[0-3]\\d\\s*")){
@@ -649,7 +365,7 @@ public class DataBase {
         System.out.println("There are " + counter + " workers with StartDate less than " + commandWithStartDate);
     }
 
-    protected void filterGreaterThanStartDate(String commandWithStartDate){
+    public void filterGreaterThanStartDate(String commandWithStartDate){
         //removing spaces and "count_less_than_start_date" word to turn into date
         commandWithStartDate = Terminal.removeString(commandWithStartDate, "filter_greater_than_start_date");
         if (!commandWithStartDate.matches("\\s*(?!0000)(\\d{4})-(0[1-9]|1[0-2])-[0-3]\\d\\s*")){
@@ -670,7 +386,7 @@ public class DataBase {
         System.out.println("-------------------------");
     }
 
-    protected void addIfMax(){
+    public void addIfMax(){
         Worker newWorker = null;
         try {
             newWorker = new Worker.WorkerBuilderFromTerminal().build();

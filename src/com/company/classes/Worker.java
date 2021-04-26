@@ -5,6 +5,7 @@ import com.company.enums.Position;
 import com.company.exceptions.InvalidDataException;
 import com.company.exceptions.OperationCanceledException;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -12,7 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Random;
 
-public class Worker {
+public class Worker implements Serializable {
     private Long id; //Поле не может быть null, Значение поля должно быть больше 0, Значение этого поля должно быть уникальным, Значение этого поля должно генерироваться автоматически
     private String name; //Поле не может быть null, Строка не может быть пустой
     private Coordinates coordinates; //Поле не может быть null

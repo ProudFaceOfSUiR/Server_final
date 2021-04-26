@@ -2,7 +2,9 @@ package com.company.classes;
 
 import com.company.exceptions.InvalidDataException;
 
-public class Person {
+import java.io.Serializable;
+
+public class Person implements Serializable {
     private Long height; //Поле может быть null, Значение поля должно быть больше 0
     private Integer weight; //Поле может быть null, Значение поля должно быть больше 0
 

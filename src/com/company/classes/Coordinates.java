@@ -2,7 +2,9 @@ package com.company.classes;
 
 import com.company.exceptions.InvalidDataException;
 
-public class Coordinates {
+import java.io.Serializable;
+
+public class Coordinates implements Serializable {
     private long x; //Максимальное значение поля: 768
     private Integer y; //Поле не может быть null
 
