@@ -19,7 +19,8 @@ public class Server {
     private ObjectOutputStream out;
     private ObjectInputStream in;
     private Messages input;
-    private String output;
+    private Messages output;
+    private String response;
 
     public ServerSocket getServer() {
         return server;
@@ -31,6 +32,7 @@ public class Server {
 
     public boolean initialize(DataBase dataBase){
         this.dataBase = dataBase;
+        this.output = new Messages();
 
         try {
             this.server = new ServerSocket(1488);
@@ -66,12 +68,15 @@ public class Server {
     }
 
     protected void sendFeedback(){
+        this.output.addObject(response);
         try {
-            this.out.writeObject(output);
+            this.out.writeObject(this.output);
             this.out.flush();
+            this.out.reset();
         } catch (Exception e) {
             System.out.println("Error while sending response: " + e.getMessage());
         }
+        this.output.clear();
     }
 
     public void readCommands(){
@@ -96,7 +101,7 @@ public class Server {
 
             switch (command) {
                 case ADD:
-                    this.output = this.dataBase.add((Worker) input.getObject(1));
+                    this.response = this.dataBase.add((Worker) input.getObject(1));
                     break;
                 case UPDATE:
                     long id = (long) input.getObject(1);
@@ -120,57 +125,57 @@ public class Server {
                         }
                         this.dataBase.remove(String.valueOf(id));
                         this.dataBase.add((Worker) this.input.getObject(0));
-                        this.output = "Worker has been successfully updated (server)";
+                        this.response = "Worker has been successfully updated (server)";
                     } else {
-                        this.output = "Invalid id";
+                        this.response = "Invalid id";
                     }
                     break;
                 case REMOVE_BY_ID:
-                    this.output = this.dataBase.remove((String)input.getObject(1));
+                    this.response = this.dataBase.remove((String)input.getObject(1));
                     break;
                 case CLEAR:
                     this.dataBase.clear();
-                    this.output = "Databse was successfully cleared";
+                    this.response = "Databse was successfully cleared";
                     break;
                 case EXECUTE_SCRIPT:
                     //todo
                     break;
                 case EXIT:
-                    //todo
+                    this.dataBase.save();
                     break;
                 case ADD_IF_MAX:
-                    this.output = this.dataBase.addIfMax((Worker) input.getObject(1));
+                    this.response = this.dataBase.addIfMax((Worker) input.getObject(1));
                     break;
                 case REMOVE_GREATER:
-                    this.output = this.dataBase.removeGreater((String) input.getObject(1));
+                    this.response = this.dataBase.removeGreater((String) input.getObject(1));
                     break;
                 case REMOVE_LOWER:
-                    this.output = this.dataBase.removeLower((String) input.getObject(1));
+                    this.response = this.dataBase.removeLower((String) input.getObject(1));
                     break;
                 case GROUP_COUNTING_BY_POSITION:
-                    this.output = this.dataBase.groupCountingByPosition();
+                    this.response = this.dataBase.groupCountingByPosition();
                     break;
                 case COUNT_LESS_THAN_START_DATE:
-                    this.output = this.dataBase.countLessThanStartDate((String) input.getObject(1));
+                    this.response = this.dataBase.countLessThanStartDate((String) input.getObject(1));
                     break;
                 case FILTER_GREATER_THAN_START_DATE:
-                    this.output = this.dataBase.filterGreaterThanStartDate((String) input.getObject(1));
+                    this.response = this.dataBase.filterGreaterThanStartDate((String) input.getObject(1));
                     break;
                 case FILL_FROM_FILE:
                     this.dataBase.setDatabase((LinkedList<Worker>) input.getObject(1));
-                    this.output = "Database was successfully ";
+                    this.response = "Server database successfully merged with the client's";
                     break;
                 case INFO:
-                    this.output = dataBase.info();
+                    this.response = dataBase.info();
                     break;
                 case SHOW:
-                    this.output = dataBase.show();
+                    this.response = dataBase.show();
                     break;
                 case HELP:
-                    this.output = dataBase.help();
+                    this.response = dataBase.help();
                     break;
                 default:
-                    this.output = ("Unexpected value: " + command);
+                    this.response = ("Unexpected value: " + command);
             }
 
             sendFeedback();

@@ -44,7 +44,7 @@ public class DataBase implements Serializable {
         this.scriptName = "";
         this.isInitialized = true;
 
-        System.out.println("Database has been initialized");
+        System.out.println("Server database has been initialized");
         System.out.println("------------------------------------");
     }
 
@@ -147,50 +147,28 @@ public class DataBase implements Serializable {
     public String info(){
         StringBuilder sb = new StringBuilder();
 
-        sb.append(("------------------------------------")); sb.append("\n");
         sb.append(("Type: Linked List")); sb.append("\n");
         sb.append(("Initialization date: " + initializationTime.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT, FormatStyle.MEDIUM)))); sb.append("\n");
         sb.append(("Number of Workers: " + this.database.size())); sb.append("\n");
-        sb.append(("------------------------------------")); sb.append("\n");
 
         return sb.toString();
     }
 
     public void clear(){
-        //asking if user really wants to clear the database
-        try {
-            if ( Terminal.binaryChoice("clear the database") ){
-                database.clear();
-                System.out.println("The database was successfully cleared");
-            } else {
-                System.out.println("Operation cancelled");
-            }
-        } catch (OperationCanceledException e) {
-            //catch EOF
-            System.out.println(e.getMessage());
-        }
+        database.clear();
     }
 
     public void save(){
-        //input file name
-        System.out.print("Please, type the name of a new file: ");
-        String newFilename;
-        try {
-            newFilename = Terminal.removeSpaces(Terminal.repeatInputAndExpectRegex("filename", "\\s*\\w+\\s*")) + ".xml";
-        } catch (OperationCanceledException e) {
-            System.out.println(e.getMessage());
-            return;
-        }
+        //making new name which is "database" + date of initialization
+        String newFilename = "database_" + this.initializationTime.format(
+                DateTimeFormatter.ISO_DATE_TIME
+        ).replace(" ", "_").replace(":", "-");
 
-        //checking if user wants to overwrite existing file
-        //if not - throw exception == canceling
-        try {
-            if (FileParser.overWriteFile(newFilename)){
-                FileParser.dataBasetoXML(FileParser.dataBaseToString(this.database), newFilename);
-            }
-        } catch (OperationCanceledException e) {
-            System.out.println(e.getMessage());
-        }
+        newFilename = newFilename.substring(0, newFilename.indexOf("."));
+        newFilename = newFilename.concat(".xml");
+
+        //saving
+        FileParser.dataBasetoXML(FileParser.dataBaseToString(this.database), newFilename);
     }
 
     public String remove(String commandWithID){
