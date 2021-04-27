@@ -137,9 +137,6 @@ public class Server {
                 this.dataBase.clear();
                 this.response = "Databse was successfully cleared";
                 break;
-            case EXECUTE_SCRIPT:
-                //todo
-                break;
             case EXIT:
                 this.dataBase.save();
                 break;
