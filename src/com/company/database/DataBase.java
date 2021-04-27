@@ -188,51 +188,6 @@ public class DataBase implements Serializable {
         }
     }
 
-    /*public void executeScript(String commandWithFilename){
-        //removing spaces and "remove" word to turn into long
-        commandWithFilename = Terminal.removeString(commandWithFilename, "execute_script") + ".txt";
-
-        //catching recursion
-        if (this.scriptName.equals(commandWithFilename)){
-            this.recursionCounter++;
-        } else {
-            this.scriptName = commandWithFilename;
-            this.recursionCounter = 0;
-        }
-
-        //stopping if recursion detected
-        if (this.recursionCounter > 10){
-            System.out.println("Executing stopped to avoid stack overflow");
-            this.scriptName = commandWithFilename;
-            this.recursionCounter = 0;
-            this.terminal = new Scanner(System.in);
-            Terminal.changeScanner(this.terminal);
-            readFromTerminal();
-            return;
-        }
-
-        //new file and check if it exist
-        File f = new File(commandWithFilename);
-        if ( FileParser.alreadyExistCheck(commandWithFilename)){
-            try {
-                //changing terminal scanner on file's
-                //IMPORTANT: THE LINK TO DATABASE'S SCANNER IS GIVEN, NOT NEW
-                this.terminal = new Scanner(f);
-                Terminal.changeScanner(this.terminal);
-                while (this.terminal.hasNext()) {
-                    readFromTerminal();
-                }
-            } catch (FileNotFoundException e) {
-                System.out.println(e.getMessage());
-            }
-        }
-        //chaging terminal back
-        this.terminal = new Scanner(System.in);
-        Terminal.changeScanner(this.terminal);
-        //continue reading
-        readFromTerminal();
-    }*/
-
     public String removeGreater(String commandWithSalary){
         //removing spaces and "update" word to turn into long
         commandWithSalary = Terminal.removeString(commandWithSalary, "remove_greater");
