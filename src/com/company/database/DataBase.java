@@ -1,12 +1,8 @@
 package com.company.database;
 
-import com.company.classes.Coordinates;
-import com.company.classes.Person;
-import com.company.enums.Fields;
+
 import com.company.classes.Worker;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -17,7 +13,6 @@ import java.util.*;
 
 import com.company.enums.Commands;
 import com.company.enums.Position;
-import com.company.exceptions.InvalidDataException;
 import com.company.exceptions.OperationCanceledException;
 import com.company.exceptions.UnknownCommandException;
 
@@ -64,7 +59,7 @@ public class DataBase implements Serializable {
      * @param id
      * @return
      */
-    protected int returnIndexById(long id){
+    public int returnIndexById(long id){
         int index = -1;
         for (int i = 0; i < database.size(); i++) {
             if (database.get(i).getId() == id){
@@ -75,24 +70,11 @@ public class DataBase implements Serializable {
         return index;
     }
 
+    public Worker getWorkerByIndex(int index){
+        return this.database.get(index);
+    }
+
     //terminal commands
-
-    /*protected void updateById(String commandWithID) throws OperationCanceledException {
-        //removing spaces and "update" word to turn into long
-        commandWithID = Terminal.removeString(commandWithID, "update");
-        if (commandWithID.isEmpty() || !commandWithID.matches("\\d+")){
-            System.out.println("Invalid id");
-            return;
-        }
-        long id = Long.parseLong(commandWithID);
-
-        //trying to find element
-        if (returnIndexById(id) != -1){
-            updateFields(returnIndexById(id));
-        } else {
-            System.out.println("Element not found");
-        }
-    }*/
 
     public String help(){
         StringBuilder sb = new StringBuilder();

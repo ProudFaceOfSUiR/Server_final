@@ -35,7 +35,7 @@ public class Main {
         }
         while (true){
             //connecting socket
-            if (!server.connectSocket()){
+            if (!server.connectSocket() || !server.getClient().isConnected()){
                 System.out.println("Reconnecting...");
                 try {
                     Thread.sleep(5000);

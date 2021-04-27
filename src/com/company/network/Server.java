@@ -21,6 +21,14 @@ public class Server {
     private Messages input;
     private String output;
 
+    public ServerSocket getServer() {
+        return server;
+    }
+
+    public Socket getClient() {
+        return client;
+    }
+
     public boolean initialize(DataBase dataBase){
         this.dataBase = dataBase;
 
@@ -91,8 +99,31 @@ public class Server {
                     this.output = this.dataBase.add((Worker) input.getObject(1));
                     break;
                 case UPDATE:
-                    //todo
-                    //int index = (int) input.getObject(1);
+                    long id = (long) input.getObject(1);
+                    //check if worker exists
+                    if (dataBase.returnIndexById(id) != -1){
+                        //sending the worker
+                        Messages workerToUpdate = new Messages();
+                        workerToUpdate.addObject(dataBase.getWorkerByIndex(dataBase.returnIndexById(id)));
+                        try {
+                            this.out.writeObject(workerToUpdate);
+                            this.out.flush();
+                        } catch (IOException e) {
+                            System.out.println(e.getMessage());
+                            return;
+                        }
+                        //getting worker
+                        try {
+                            this.input = (Messages) this.in.readObject();
+                        } catch (IOException | ClassNotFoundException e) {
+                            System.out.println(e.getMessage());
+                        }
+                        this.dataBase.remove(String.valueOf(id));
+                        this.dataBase.add((Worker) this.input.getObject(0));
+                        this.output = "Worker has been successfully updated (server)";
+                    } else {
+                        this.output = "Invalid id";
+                    }
                     break;
                 case REMOVE_BY_ID:
                     this.output = this.dataBase.remove((String)input.getObject(1));
