@@ -1,18 +1,8 @@
 package com.company.main;
 
-import com.company.classes.Worker;
 import com.company.database.DataBase;
-import com.company.enums.Commands;
-import com.company.network.Messages;
+import com.company.exceptions.NotConnectedException;
 import com.company.network.Server;
-
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.LinkedList;
 
 public class Main {
 
@@ -33,20 +23,22 @@ public class Main {
                 }
             }
         }
+        boolean isConnected = server.connectSocket();
         while (true){
             //connecting socket
-            if (!server.connectSocket() || !server.getClient().isConnected()){
+            if (!isConnected){
                 System.out.println("Reconnecting...");
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    System.out.println(e.getMessage());
-                }
+                isConnected = server.connectSocket();
                 continue;
             }
 
             //reading commands from socket
-            server.readCommands();
+            try {
+                server.readCommand();
+            } catch (NotConnectedException e) {
+                System.out.println(e.getMessage());
+                isConnected = false;
+            }
         }
     }
 }
