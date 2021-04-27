@@ -97,12 +97,10 @@ public class DataBase implements Serializable {
     public String help(){
         StringBuilder sb = new StringBuilder();
 
-        sb.append("------------------------------------");sb.append("\n");
         sb.append("Commands: ");sb.append("\n");
-        for (int i = 0; i < Commands.values().length; i++) {
+        for (int i = 0; i < Commands.values().length - 1; i++) {
             sb.append(" " + Commands.getCommandsWithDescriptions()[i]);sb.append("\n");
         }
-        sb.append("------------------------------------");sb.append("\n");
 
         return sb.toString();
     }
@@ -122,7 +120,6 @@ public class DataBase implements Serializable {
 
         StringBuilder stringBuilder = new StringBuilder();
 
-        stringBuilder.append("------------------------------------");stringBuilder.append("\n");
         List<List<String>> rows = new ArrayList<>();
         List<String> headers = Arrays.asList("Name", "id", "Salary", "Position", "Personality", "Coordinates", "Start Date", "End Date");
         rows.add(headers);
@@ -160,8 +157,7 @@ public class DataBase implements Serializable {
             rows.add((List<String>) sb.clone());
             sb.clear();
         }
-        stringBuilder.append(Terminal.formatAsTable(rows));stringBuilder.append("\n");
-        stringBuilder.append("------------------------------------"); stringBuilder.append("\n");
+        stringBuilder.append(Terminal.formatAsTable(rows));
 
         return stringBuilder.toString();
     }
@@ -215,30 +211,20 @@ public class DataBase implements Serializable {
         }
     }
 
-    public void remove(String commandWithID){
+    public String remove(String commandWithID){
         //removing spaces and "remove" word to turn into long
         commandWithID = Terminal.removeString(commandWithID, "remove_by_id");
         if (commandWithID.isEmpty()){
-            System.out.println("Invalid id. Operation canceled");
-            return;
+            return "Invalid id. Operation canceled";
         }
         long id = Long.parseLong(commandWithID);
 
         //trying to find element
         if (returnIndexById(id) != -1){
-            try {
-                if (Terminal.binaryChoice("delete worker")){
-                    this.database.remove(returnIndexById(id));
-                    System.out.println("Worker was successfully deleted from the database");
-                } else {
-                    System.out.println("Operation canceled");
-                }
-            } catch (OperationCanceledException e) {
-                //catching EOF
-                System.out.println(e.getMessage());
-            }
+            this.database.remove(returnIndexById(id));
+            return "Worker was successfully deleted from the database";
         } else {
-            System.out.println("Element not found");
+            return "Element not found";
         }
     }
 
@@ -287,7 +273,7 @@ public class DataBase implements Serializable {
         readFromTerminal();
     }*/
 
-    public void removeGreater(String commandWithSalary){
+    public String removeGreater(String commandWithSalary){
         //removing spaces and "update" word to turn into long
         commandWithSalary = Terminal.removeString(commandWithSalary, "remove_greater");
         double salary = Double.parseDouble(commandWithSalary);
@@ -305,10 +291,10 @@ public class DataBase implements Serializable {
             this.database.remove(returnIndexById(toRemoveID[i]));
         }
 
-        System.out.println("Workers with salary greater " + salary + " were successfully removed!");
+        return "Workers with salary greater " + salary + " were successfully removed!";
     }
 
-    public void removeLower(String commandWithSalary){
+    public String removeLower(String commandWithSalary){
         //removing spaces and "update" word to turn into long
         commandWithSalary = Terminal.removeString(commandWithSalary, "remove_lower");
         double salary = Double.parseDouble(commandWithSalary);
@@ -325,31 +311,32 @@ public class DataBase implements Serializable {
         for (int i = 0; i < toRemoveCounter; i++) {
             this.database.remove(returnIndexById(toRemoveID[i]));
         }
-        System.out.println("Workers with salary lower " + salary + " were successfully removed!");
+        return "Workers with salary lower " + salary + " were successfully removed!";
     }
 
-    public void groupCountingByPosition(){
+    public String groupCountingByPosition(){
+        StringBuilder out = new StringBuilder();
         StringBuilder sb = new StringBuilder();
         for (Position p: Position.values()) {
-            System.out.println("-----------" + p.toString() + "-----------");
+            out.append("-----------" + p.toString() + "-----------");out.append("\n");
             for (Worker worker : this.database) {
                 if (worker.getPosition() != null) {
                     if (worker.getPosition().equals(p)){
                         sb.append(worker.getName()).append(" ").append(worker.getId());
                     }
                 }
-                System.out.println(sb.toString());
+                out.append(sb.toString());out.append("\n");
                 sb.delete(0, sb.length());
             }
         }
+        return out.toString();
     }
 
-    public void countLessThanStartDate(String commandWithStartDate){
+    public String countLessThanStartDate(String commandWithStartDate){
         //removing spaces and "count_less_than_start_date" word to turn into date
         commandWithStartDate = Terminal.removeString(commandWithStartDate, "count_less_than_start_date");
         if (!commandWithStartDate.matches("\\s*(?!0000)(\\d{4})-(0[1-9]|1[0-2])-[0-3]\\d\\s*")){
-            System.out.println("Invalid date!");
-            return;
+            return "Invalid date!";
         }
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -362,47 +349,39 @@ public class DataBase implements Serializable {
                 counter++;
             }
         }
-        System.out.println("There are " + counter + " workers with StartDate less than " + commandWithStartDate);
+        return "There are " + counter + " workers with StartDate less than " + commandWithStartDate;
     }
 
-    public void filterGreaterThanStartDate(String commandWithStartDate){
+    public String filterGreaterThanStartDate(String commandWithStartDate){
         //removing spaces and "count_less_than_start_date" word to turn into date
         commandWithStartDate = Terminal.removeString(commandWithStartDate, "filter_greater_than_start_date");
         if (!commandWithStartDate.matches("\\s*(?!0000)(\\d{4})-(0[1-9]|1[0-2])-[0-3]\\d\\s*")){
-            System.out.println("Invalid date!");
-            return;
+            return "Invalid date!";
         }
+
+        StringBuilder out = new StringBuilder();
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate date = LocalDate.parse(commandWithStartDate, formatter);
         ZonedDateTime z = date.atStartOfDay(ZoneId.systemDefault());
 
-        System.out.println("-----Workers with date after " + commandWithStartDate + " -----");
+        out.append("-----Workers with date after " + commandWithStartDate + "-----");out.append("\n");
         for (Worker w:this.database) {
             if (w.getStartDate().isAfter(z)){
-                System.out.println(w.getName() + " " + w.getId());
+                out.append(w.getName() + " " + w.getId());out.append("\n");
             }
         }
-        System.out.println("-------------------------");
+        return out.toString();
     }
 
-    public void addIfMax(){
-        Worker newWorker = null;
-        try {
-            newWorker = new Worker.WorkerBuilderFromTerminal().build();
-        } catch (OperationCanceledException | InvalidDataException e) {
-            System.out.println(e.getMessage());
-            System.out.println("Couldn't add worker");
-            return;
-        }
-
+    public String addIfMax(Worker newWorker){
         for (Worker w: this.database) {
             if (w.getSalary() > newWorker.getSalary()){
-                System.out.println("New worker hasn't got the max salary!");
-                return;
+                return "New worker hasn't got the max salary!";
             }
         }
 
         this.database.add(newWorker);
+        return "Worker has been successfully added!";
     }
 }
