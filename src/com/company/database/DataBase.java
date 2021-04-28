@@ -10,6 +10,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.company.enums.Commands;
 import com.company.enums.Position;
@@ -49,7 +50,12 @@ public class DataBase implements Serializable {
     }
 
     public void setDatabase(LinkedList<Worker> database){
-        this.database = database;
+        //filtering null workers from the good ones
+        this.database = (LinkedList<Worker>) Terminal.getInstance(
+                database.stream()
+                .filter(worker -> !Objects.isNull(worker)).collect(Collectors.toList())
+        );
+        sortBySize();
     }
 
     //protected methods
@@ -90,6 +96,7 @@ public class DataBase implements Serializable {
     public String add(Worker worker) {
         //adding to database
         this.database.add(worker);
+        sortBySize();
         return "New worker was successfully added!";
     }
 
@@ -182,6 +189,7 @@ public class DataBase implements Serializable {
         //trying to find element
         if (returnIndexById(id) != -1){
             this.database.remove(returnIndexById(id));
+            sortBySize();
             return "Worker was successfully deleted from the database";
         } else {
             return "Element not found";
@@ -206,6 +214,7 @@ public class DataBase implements Serializable {
             this.database.remove(returnIndexById(toRemoveID[i]));
         }
 
+        sortBySize();
         return "Workers with salary greater " + salary + " were successfully removed!";
     }
 
@@ -226,6 +235,7 @@ public class DataBase implements Serializable {
         for (int i = 0; i < toRemoveCounter; i++) {
             this.database.remove(returnIndexById(toRemoveID[i]));
         }
+        sortBySize();
         return "Workers with salary lower " + salary + " were successfully removed!";
     }
 
@@ -297,6 +307,16 @@ public class DataBase implements Serializable {
         }
 
         this.database.add(newWorker);
+        sortBySize();
         return "Worker has been successfully added!";
+    }
+
+    public void sortBySize(){
+        Collections.sort(this.database,new Comparator<Worker>() {
+            @Override
+            public int compare(Worker a, Worker b){
+                return Double.compare(a.getSalary(), b.getSalary());
+            }
+        });
     }
 }

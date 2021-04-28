@@ -4,6 +4,8 @@ import com.company.database.DataBase;
 import com.company.exceptions.NotConnectedException;
 import com.company.network.Server;
 
+//variant 331122
+
 public class Main {
 
     public static void main(String[] args) {

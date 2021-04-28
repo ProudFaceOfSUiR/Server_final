@@ -4,13 +4,21 @@ import com.company.enums.Commands;
 import com.company.exceptions.OperationCanceledException;
 import com.company.exceptions.UnknownCommandException;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
+import java.util.*;
 
 public class Terminal {
     private static Scanner terminal = new Scanner(System.in);
+
+    public static <T> List<T> getInstance(List<T> ArrayList)
+    {
+        List<T> linkedList = new LinkedList<>();
+
+        for (T e: ArrayList) {
+            linkedList.add(e);
+        }
+
+        return linkedList;
+    }
 
     /**
      * Changes scanner (it's needed when we execute script
