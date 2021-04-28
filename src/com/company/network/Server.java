@@ -160,7 +160,7 @@ public class Server {
                 break;
             case FILL_FROM_FILE:
                 this.dataBase.setDatabase((LinkedList<Worker>) input.getObject(1));
-                this.response = "Server database successfully merged with the client's";
+                this.response = "Server database has been successfully replaced by client's";
                 break;
             case INFO:
                 this.response = dataBase.info();
