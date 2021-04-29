@@ -55,6 +55,9 @@ public class DataBase implements Serializable {
                 database.stream()
                 .filter(worker -> !Objects.isNull(worker)).collect(Collectors.toList())
         );
+        for (Worker w:this.database) {
+            w.setId();
+        }
         sortBySize();
     }
 
@@ -95,6 +98,7 @@ public class DataBase implements Serializable {
 
     public String add(Worker worker) {
         //adding to database
+        worker.setId();
         this.database.add(worker);
         sortBySize();
         return "New worker was successfully added!";
@@ -306,6 +310,7 @@ public class DataBase implements Serializable {
             }
         }
 
+        newWorker.setId();
         this.database.add(newWorker);
         sortBySize();
         return "Worker has been successfully added!";
