@@ -1,5 +1,6 @@
 package com.company.database;
 
+import com.company.Login.User;
 import com.company.classes.Coordinates;
 import com.company.classes.Person;
 import com.company.classes.Worker;
@@ -10,6 +11,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import javax.jws.soap.SOAPBinding;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.BufferedWriter;
@@ -18,13 +20,17 @@ import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 
-public class FileParser {
+public class FileParser1 {
 
     /**
      * Check if file path is valid
@@ -101,8 +107,7 @@ public class FileParser {
      * @return
      * @throws Exception
      */
-    /*
-    public static LinkedList<Worker> xmlToDatabase(String filepath) throws Exception{
+    /*public static LinkedList<Worker> xmlToDatabase(String filepath) throws Exception{
 
         if (!pathCheck(filepath)){
             throw new Exception("Invalid path. Operation cancelled");
@@ -272,52 +277,138 @@ public class FileParser {
             System.out.println("Error: " + e.getMessage());
             return null;
         }
-    }
+    }*/
 
     /**
      * Makes a big string with the whole database
      * @param database
      * @return
      */
-    public static String dataBaseToString(LinkedList<Worker> database){
+    public static String dataBaseToString(LinkedList<Worker> database, String user) {
         StringBuilder sb = new StringBuilder();
 
         //writing preamble
-        sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>").append("\n");
-        sb.append("<database>").append("\n");
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         //writing workers
-        for (Worker w: database) {
-            sb.append("\t").append("<worker>").append("\n");
+        String sql = new String();
+        for (Worker w : database) {
+            System.out.println(w.getUser().getLogin());
+            System.out.println(user);
+            if (w.getUser().getLogin().equals(user)) {
+                //sb.append("INSERT INTO DATABASE (NAME,SALARY,COORDINATES,STARTDAY,ENDDAY)");
+                sb.append("INSERT INTO DATABASE (NAME,SALARY,POSITION,COORDINATES,PERSON,STARTDATE,ENDDATE,LOGIN) ")
+                        .append("VALUES ('")
+                        .append(w.getName()).append("',")
+                        .append(w.getSalary()).append(",'")
+                        .append(w.getPosition().toString()).append("','")
+                        .append(w.getCoordinates().getX()).append(",").append(w.getCoordinates().getY()).append("','")
+                        .append(w.getPerson().getHeight()).append(",").append(w.getPerson().getWeight()).append("','")
+                        .append(w.getStartDate().format(formatter)).append("','")
+                        .append(w.getStartDate().format(formatter)).append("','")
+                        .append(user)
+                        //.append(w.getPosition().toString()).append(",")
+                        .append("');");
 
-            sb.append("\t\t").append("<name>").append(w.getName()).append("</name>").append("\n");
-            sb.append("\t\t").append("<salary>").append(w.getSalary()).append("</salary>").append("\n");
-
-            if (w.getPosition() != null){
-                sb.append("\t\t").append("<position>").append(w.getPosition().toString()).append("</position>").append("\n");
             }
-
-            sb.append("\t\t").append("<coordinates>").append(w.getCoordinates().getX()).append(",").append(w.getCoordinates().getY()).append("</coordinates>").append("\n");
-
-            sb.append("\t\t").append("<startdate>").append(w.getStartDate().format(formatter)).append("</startdate>").append("\n");
-
-            if (w.getEndDate() != null){
-                sb.append("\t\t").append("<enddate>").append(w.getStartDate().format(formatter)).append("</enddate>").append("\n");
-            }
-
-            sb.append("\t").append("</worker>").append("\n");
         }
-
-        sb.append("</database>");
         return sb.toString();
     }
 
-    /**
-     * Parses database to XML
-     * @param database
-     * @param filename
-     */
+    public static LinkedList<Worker> stringToDatabase(){
+        Connection c = null;
+        Statement stmt = null;
+        try {
+            Class.forName("org.postgresql.Driver");
+            c = DriverManager
+                    .getConnection("jdbc:postgresql://localhost:5432/postgres",
+                            "postgres", "12345678");
+            c.setAutoCommit(false);
+            System.out.println("Opened database successfully");
+
+            //fields of a worker
+            String name;
+            double salary;
+
+            //position
+            String positionString;
+            Position position;
+
+            //personality
+            Person person = null;
+
+            //coordinates
+            Coordinates coordinates;
+
+            //dates
+            ZonedDateTime startdate;
+            ZonedDateTime endDate = null;
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+            //counter of successfully added workers
+            int successfullyAddedWorkers = 0;
+
+            User user = new User();
+
+            stmt = c.createStatement();
+            ResultSet rs = stmt.executeQuery( "SELECT * FROM DATABASE;" );
+            LinkedList<Worker> collection = new LinkedList<>();
+            Worker worker = new Worker();
+            int ID;
+            while ( rs.next() ) {
+                ID = (rs.getInt("id"));
+                name = rs.getString("name");
+                salary = rs.getDouble("salary");
+                position = Position.findEnum(rs.getString("position"));
+                String[] heightWeight = rs.getString("person").split(",");
+                person = new Person(Long.valueOf(Terminal.removeSpaces(heightWeight[0])), Integer.valueOf(Terminal.removeSpaces(heightWeight[1])));
+                String[] xy = rs.getString("coordinates").split(",");
+                coordinates = new Coordinates(Long.parseLong(Terminal.removeSpaces(xy[0])), Integer.valueOf(Terminal.removeSpaces(xy[1])));
+                LocalDate date = LocalDate.parse(
+                        Terminal.removeSpaces(
+                                rs.getString("startdate")),
+                        formatter);
+                startdate = date.atStartOfDay(ZoneId.systemDefault());
+                LocalDate date1 = LocalDate.parse(
+                        Terminal.removeSpaces(
+                                rs.getString("enddate")),
+                        formatter);
+                endDate = date.atStartOfDay(ZoneId.systemDefault());
+
+                user.setLogin(Terminal.removeSpaces(rs.getString("login")));
+
+                collection.add(new Worker(ID,name, salary, position, person, coordinates, startdate, endDate,user));
+                successfullyAddedWorkers++;
+                //worker.setPosition(rs.);
+                /*String  name = rs.getString("name");
+                int age  = rs.getInt("age");
+                String  address = rs.getString("address");
+                float salary = rs.getFloat("salary");
+                System.out.println( "ID = " + id );
+                System.out.println( "NAME = " + name );
+                System.out.println( "AGE = " + age );
+                System.out.println( "ADDRESS = " + address );
+                System.out.println( "SALARY = " + salary );
+                System.out.println();*/
+                //collection.add(worker);
+                System.out.println(user.getLogin());
+            }
+            rs.close();
+            stmt.close();
+            c.close();
+            return collection;
+        } catch ( Exception e ) {
+            System.err.println( e.getClass().getName()+": "+ e.getMessage() );
+            //System.exit(0);
+            return null;
+        }
+    }
+
+        /**
+         * Parses database to XML
+         * @param database
+         * @param filename
+         *//*
     public static void dataBasetoXML(String database, String filename){
         try {
             // Creates a FileWriter
@@ -334,6 +425,5 @@ public class FileParser {
             buffer.close();
         } catch (Exception e){
             System.out.println(e.getMessage());
-        }
-    }
+        }*/
 }
