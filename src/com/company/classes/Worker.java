@@ -28,6 +28,15 @@ public class Worker implements Serializable {
     private Position position; //Поле может быть null
     private Person person; //Поле может быть null
     private User user;
+    private String login;
+
+    public void setLogin(String login){
+        this.login = login;
+    }
+
+    public String getLogin(){
+        return this.login;
+    }
 
     public void setUser(User user) {
         this.user = user;

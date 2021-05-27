@@ -167,9 +167,11 @@ public class Terminal {
         for (List<String> row : rows)
         {
             for (int i = 0; i < row.size(); i++)
-            {
-                maxLengths[i] = Math.max(maxLengths[i], row.get(i).length());
-            }
+            try {
+                {
+                    maxLengths[i] = Math.max(maxLengths[i], row.get(i).length());
+                }
+            }catch (NullPointerException e){ }
         }
 
         StringBuilder formatBuilder = new StringBuilder();

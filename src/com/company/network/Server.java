@@ -38,7 +38,7 @@ public class Server {
     }
 
     public void addUser(User user){
-        this.user = user;
+        this.user = new User(user);
     }
 
     public boolean initialize(DataBase dataBase){
@@ -150,6 +150,7 @@ public class Server {
                     this.output.addObject(Commands.SIGN_UP);
                     this.output.addObject(true);
                     this.addUser(user);
+                    this.login = this.user.getLogin();//&&&&
                     System.out.println(this.user.getLogin());
                 } else {
                     this.output.addObject(Commands.SIGN_UP);
@@ -159,37 +160,73 @@ public class Server {
                 break;
             case ADD:
                 System.out.println();
-                System.out.println(this.user.getLogin());
+                try {
+                    if (this.user.getLogin().equals(this.login)){
+                    }else{
+                        this.user = new User();
+                        user.setLogin(this.login);
+                    }
+                } catch (NullPointerException e){
+                    this.user = new User();
+                    user.setLogin(this.login);
+                }
+                System.out.println(this.user.getLogin());//????
                 this.output.addObject(Commands.NO_FEEDBACK);
                 this.response = this.dataBase.add((Worker) input.getObject(1),this.user);
                 break;
             case UPDATE:
                 this.output.addObject(Commands.NO_FEEDBACK);
-                long id = (long) input.getObject(1);
+                int id = (int) input.getObject(1);
                 //check if worker exists
-                if (dataBase.returnIndexById(id) != -1){
+                int num = -1;
+                for (int i = 0; i< this.dataBase.database.size();i++){
+                    if (this.dataBase.database.get(i).getId()==id){
+                        num = i;
+                        System.out.println(num);
+                    }
+                }
 
-                    //sending the worker
-                    Messages workerToUpdate = new Messages();
-                    workerToUpdate.addObject(dataBase.getWorkerByIndex(dataBase.returnIndexById(id)));
-                    try {
-                        this.out.writeObject(workerToUpdate);
-                        this.out.flush();
-                    } catch (IOException e) {
-                        System.out.println(e.getMessage());
-                        return user;
+                //int num = dataBase.returnIndexById(id);
+                try {
+                    if (true) {
+                        if (dataBase.returnIndexById(num) != -1) {
+
+                            //sending the worker
+                            Messages workerToUpdate = new Messages();
+                            workerToUpdate.addObject(dataBase.getWorkerByIndex(dataBase.returnIndexById(num)));
+                            String log = dataBase.database.get(num).getUser().getLogin();
+                            System.out.println(log);
+                            try {
+                                this.out.writeObject(workerToUpdate);
+                                this.out.flush();
+                            } catch (IOException e) {
+                                System.out.println(e.getMessage());
+                                return user;
+                            }
+                            //getting worker
+                            try {
+                                this.input = (Messages) this.in.readObject();
+                                System.out.println("fllll");
+                            } catch (IOException | ClassNotFoundException e) {
+                                System.out.println(e.getMessage());
+                            }
+                            System.out.println("check");
+                            System.out.println(this.user.getLogin());
+                            System.out.println(this.dataBase.database.get((num)).getLogin());
+                            if (log.equals(this.login)||this.dataBase.database.get((num)).getLogin().equals(this.user.getLogin())) {
+
+                                this.dataBase.remove(String.valueOf(id));
+                                this.dataBase.add((Worker) this.input.getObject(0), this.user);
+                                this.response = "Worker has been successfully updated (server)";
+                            } else {
+                                System.out.println("Invalid ID");
+                            }
+                            } else {
+                            this.response = "Invalid id";
+                        }
                     }
-                    //getting worker
-                    try {
-                        this.input = (Messages) this.in.readObject();
-                    } catch (IOException | ClassNotFoundException e) {
-                        System.out.println(e.getMessage());
-                    }
-                    this.dataBase.remove(String.valueOf(id));
-                    this.dataBase.add((Worker) this.input.getObject(0),user);
-                    this.response = "Worker has been successfully updated (server)";
-                } else {
-                    this.response = "Invalid id";
+                }catch (NullPointerException e){
+                    this.response = "invalid id";
                 }
                 break;
             case REMOVE_BY_ID:
@@ -204,9 +241,12 @@ public class Server {
             case EXIT:
                 //System.out.println(FileParser1.dataBaseToString(dataBase.database));
                 //FileParser1 fileParser1 = new FileParser1();
-                System.out.println(this.user.getLogin());
+                //System.out.println(this.user.getLogin());
+                //System.out.println(this.login);
                 System.out.println(this.login);
+                System.out.println(this.user.getLogin());
                 String s = FileParser1.dataBaseToString(dataBase.getDatabase(),this.login);
+                System.out.println(s);
                 Check.save(s, login);
                 //this.dataBase.save();
                 break;

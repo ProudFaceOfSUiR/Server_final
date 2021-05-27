@@ -11,6 +11,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Scanner;
 
 public class User implements Serializable {
+    private static final long serialVersionUID = 60L;
+
     private String password;
     private String login;
     private boolean newUser;
@@ -20,7 +22,15 @@ public class User implements Serializable {
         return this.newUser;
     }
 
+    public User(User user) {
+        this.login = user.login;
+        this.password = user.password;
+        this.newUser = user.newUser;
+        this.id = user.id;
+    }
 
+    public User() {
+    }
 
     public void setId(int id) {
         this.id = id;

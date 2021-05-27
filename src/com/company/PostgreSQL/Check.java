@@ -66,7 +66,7 @@ public class Check {
             c.setAutoCommit(false);
             System.out.println("Opened database successfully");
             stmt = c.createStatement();
-            stmt.executeUpdate("DELETE FROM DATABASE");
+            stmt.executeUpdate("DELETE FROM DATABASE WHERE LOGIN='"+login+"'");
             stmt.close();
             c.commit();
             stmt = c.createStatement();

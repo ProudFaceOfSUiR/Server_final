@@ -130,7 +130,7 @@ public class DataBase implements Serializable {
         StringBuilder stringBuilder = new StringBuilder();
 
         List<List<String>> rows = new ArrayList<>();
-        List<String> headers = Arrays.asList("Name", "id", "Salary", "Position", "Personality", "Coordinates", "Start Date", "End Date");
+        List<String> headers = Arrays.asList("Name", "id", "Salary", "Position", "Personality", "Coordinates", "Start Date", "End Date", "User");
         rows.add(headers);
         StringBuilder coord = new StringBuilder();
         ArrayList<String> sb = new ArrayList<>();
@@ -163,6 +163,8 @@ public class DataBase implements Serializable {
                 sb.add("null");
             }
 
+            sb.add(worker.getUser().getLogin());
+
             rows.add((List<String>) sb.clone());
             sb.clear();
         }
@@ -182,7 +184,13 @@ public class DataBase implements Serializable {
     }
 
     public void clear(){
-        database.clear();
+        for(int i =0; i<this.database.size();i++) {
+            if (database.get(i).getUser().getLogin().equals(this.user.getLogin())) {
+                this.database.remove(i);
+                sortBySize();
+            }
+
+        }
     }
 
     public void save(){
@@ -198,23 +206,32 @@ public class DataBase implements Serializable {
         FileParser.dataBasetoXML(FileParser.dataBaseToString(this.database), newFilename);
     }
 
-    public String remove(String commandWithID){
+    public String remove(String commandWithID) {
         //removing spaces and "remove" word to turn into long
         commandWithID = Terminal.removeString(commandWithID, "remove_by_id");
-        if (commandWithID.isEmpty()){
+        if (commandWithID.isEmpty()) {
             return "Invalid id. Operation canceled";
         }
         int id = Integer.parseInt(commandWithID);
 
         //trying to find element
-        if ((returnIndexById(id) != -1)){
-            if (database.get(id).getUser().getLogin().equals(this.user.getLogin())) {
-                this.database.remove(returnIndexById(id));
-                sortBySize();
-                return "Worker was successfully deleted from the database";
-            } else{
-                return "It's not yours";
+        int num = -1;
+        if ((returnIndexById(id) != -1)) {
+            for (int i = 0; i < database.size(); i++) {
+                if (database.get(i).getId() == id) {
+                    num = i;
+                }
             }
+            if (num != -1) {
+                if (database.get(num).getUser().getLogin().equals(this.user.getLogin())) {
+                    this.database.remove(returnIndexById(id));
+                    sortBySize();
+                    return "Worker was successfully deleted from the database";
+                } else {
+                    return "It's not yours";
+                }
+            }
+            else {return "Element not found";}
         } else {
             return "Element not found";
         }
@@ -228,7 +245,7 @@ public class DataBase implements Serializable {
         int toRemoveCounter = 0;
         long toRemoveID[] = new long[this.database.size()];
         for (int i = 0; i < this.database.size(); i++) {
-            if (this.database.get(i).getSalary() > salary){
+            if ((this.database.get(i).getSalary() > salary)&&database.get(i).getUser().getLogin().equals(this.user.getLogin())){
                 if (database.get(i).getUser().getLogin().equals(this.user.getLogin())) {
                     toRemoveID[toRemoveCounter] = this.database.get(i).getId();
                     toRemoveCounter++;
@@ -252,7 +269,7 @@ public class DataBase implements Serializable {
         int toRemoveCounter = 0;
         long toRemoveID[] = new long[this.database.size()];
         for (int i = 0; i < this.database.size(); i++) {
-            if (this.database.get(i).getSalary() < salary){
+            if (this.database.get(i).getSalary() < salary&&database.get(i).getUser().getLogin().equals(this.user.getLogin())){
                 if (database.get(i).getUser().getLogin().equals(this.user.getLogin())) {
                     toRemoveID[toRemoveCounter] = this.database.get(i).getId();
                     toRemoveCounter++;

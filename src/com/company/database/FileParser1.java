@@ -295,6 +295,7 @@ public class FileParser1 {
         for (Worker w : database) {
             System.out.println(w.getUser().getLogin());
             System.out.println(user);
+            System.out.println();
             if (w.getUser().getLogin().equals(user)) {
                 //sb.append("INSERT INTO DATABASE (NAME,SALARY,COORDINATES,STARTDAY,ENDDAY)");
                 sb.append("INSERT INTO DATABASE (NAME,SALARY,POSITION,COORDINATES,PERSON,STARTDATE,ENDDATE,LOGIN) ")
@@ -348,7 +349,7 @@ public class FileParser1 {
             //counter of successfully added workers
             int successfullyAddedWorkers = 0;
 
-            User user = new User();
+            //User user = new User();
 
             stmt = c.createStatement();
             ResultSet rs = stmt.executeQuery( "SELECT * FROM DATABASE;" );
@@ -356,6 +357,7 @@ public class FileParser1 {
             Worker worker = new Worker();
             int ID;
             while ( rs.next() ) {
+                User user = new User();
                 ID = (rs.getInt("id"));
                 name = rs.getString("name");
                 salary = rs.getDouble("salary");
@@ -376,22 +378,9 @@ public class FileParser1 {
                 endDate = date.atStartOfDay(ZoneId.systemDefault());
 
                 user.setLogin(Terminal.removeSpaces(rs.getString("login")));
-
+                user.setPassword("");
                 collection.add(new Worker(ID,name, salary, position, person, coordinates, startdate, endDate,user));
                 successfullyAddedWorkers++;
-                //worker.setPosition(rs.);
-                /*String  name = rs.getString("name");
-                int age  = rs.getInt("age");
-                String  address = rs.getString("address");
-                float salary = rs.getFloat("salary");
-                System.out.println( "ID = " + id );
-                System.out.println( "NAME = " + name );
-                System.out.println( "AGE = " + age );
-                System.out.println( "ADDRESS = " + address );
-                System.out.println( "SALARY = " + salary );
-                System.out.println();*/
-                //collection.add(worker);
-                System.out.println(user.getLogin());
             }
             rs.close();
             stmt.close();
